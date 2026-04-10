@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripSplit - Track Group Expenses</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI Emoji', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2D3142;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00D9C0 0%, #00B8A9 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 217, 192, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 217, 192, 0.4);
+        }
+
+        .btn-secondary {
+            background: #FFD93D;
+            color: #2D3142;
+            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.3);
+        }
+
+        .btn-danger {
+            background: #FF6B6B;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2D3142;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E8E8E8;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #00D9C0;
+        }
+
+        .trip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .trip-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .trip-card h3 {
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .trip-card .trip-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .expense-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .expense-item {
+            background: #F8F9FA;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-item .expense-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .expense-item .expense-details {
+            flex: 1;
+        }
+
+        .expense-item .expense-category {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .expense-item .expense-payer {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .expense-item .expense-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00B8A9;
+        }
+
+        .expense-item .delete-btn {
+            background: #FF6B6B;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #FFD93D 0%, #FFC93D 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stats .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .stats .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats .stat-label {
+            font-weight: 600;
+        }
+
+        .stats .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .url-display {
+            background: #F8F9FA;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #E8E8E8;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #00D9C0;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .settlement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settlement-item {
+            background: #F8F9FA;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .settlement-item .settlement-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .settlement-item .settlement-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00B8A9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state .emoji {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-manage {
+            background: #FF6B6B;
+            color: white;
+        }
+
+        .badge-view {
+            background: #00D9C0;
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Screen -->
+        <div id="homeScreen">
+            <div class="card">
+                <div class="header">
+                    <h1>🌴 TripSplit 💸</h1>
+                    <p class="subtitle">Track group expenses effortlessly</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="showCreateTrip()">
+                    ➕ Create New Trip
+                </button>
+
+                <div id="tripsList" style="margin-top: 30px;">
+                    <!-- Trips will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Trip Screen -->
+        <div id="createTripScreen" class="hidden">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">🎒 Create New Trip</h2>
+
+                <div class="input-group">
+                    <label>Trip Name</label>
+                    <input type="text" id="tripNameInput" placeholder="e.g., Goa 2026" maxlength="30">
+                </div>
+
+                <div class="input-group">
+                    <label>Add People</label>
+                    <div id="peopleList" style="margin-bottom: 10px;">
+                        <!-- People will be listed here -->
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="personNameInput" placeholder="Enter name">
+                        <button class="btn btn-secondary" onclick="addPerson()" style="width: auto; padding: 12px 20px;">Add</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="createTrip()" style="margin-top: 20px;">
+                    Create Trip
+                </button>
+
+                <button class="btn" onclick="showHome()" style="background: #E8E8E8; margin-top: 10px;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Trip Created Success -->
+        <div id="tripCreatedScreen" class="hidden">
+            <div class="card">
+                <div class="header">
+                    <h2>✅ Trip Created!</h2>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">🔒 Your URL (Manage Access)</label>
+                    <div class="url-display" id="manageUrlDisplay"></div>
+                    <button class="btn btn-secondary" onclick="copyManageUrl()">
+                        📋 Copy Your URL
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">👥 Share with Group (View Only)</label>
+                    <div class="url-display" id="viewUrlDisplay"></div>
+                    <button class="btn btn-primary" onclick="shareViewUrl()">
+                        📤 Share View URL
+                    </button>
+                </div>
+
+                <button class="btn" onclick="openTrip(currentManageHash)" style="background: #00D9C0; color: white; margin-top: 20px;">
+                    Continue to Trip
+                </button>
+            </div>
+        </div>
+
+        <!-- Trip Detail Screen -->
+        <div id="tripDetailScreen" class="hidden">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+
+    <script>
+        let currentTripData = null;
+        let currentManageHash = '';
+        let currentViewHash = '';
+        let tempPeople = [];
+
+        // Category icons mapping
+        const categoryIcons = {
+            'Hotel': '🏨',
+            'Food': '🍽️',
+            'Transport': '🚕',
+            'Tickets': '🎟️',
+            'Shopping': '🛍️',
+            'Entertainment': '🎉',
+            'Other': '📸'
+        };
+
+        // Initialize app
+        window.onload = function() {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                loadTripFromHash(hash);
+            } else {
+                loadTripsList();
+            }
+        };
+
+        // Generate random 6-character code
+        function generateCode() {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return code;
+        }
+
+        // Sanitize trip name for URL
+        function sanitizeTripName(name) {
+            return name.toLowerCase()
+                .replace(/[^a-z0-9]/g, '')
+                .slice(0, 20);
+        }
+
+        // Show create trip screen
+        function showCreateTrip() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('createTripScreen').classList.remove('hidden');
+            tempPeople = [];
+            updatePeopleList();
+        }
+
+        // Add person to list
+        function addPerson() {
+            const input = document.getElementById('personNameInput');
+            const name = input.value.trim();
+            if (name && !tempPeople.includes(name)) {
+                tempPeople.push(name);
+                updatePeopleList();
+                input.value = '';
+            }
+        }
+
+        // Update people list display
+        function updatePeopleList() {
+            const container = document.getElementById('peopleList');
+            if (tempPeople.length === 0) {
+                container.innerHTML = '<p style="color: #999; font-size: 14px;">No people added yet</p>';
+                return;
+            }
+
+            container.innerHTML = tempPeople.map((person, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F8F9FA; border-radius: 8px; margin-bottom: 8px;">
+                    <span>👤 ${person}</span>
+                    <button onclick="removePerson(${index})" style="background: #FF6B6B; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Remove person from list
+        function removePerson(index) {
+            tempPeople.splice(index, 1);
+            updatePeopleList();
+        }
+
+        // Create trip
+        function createTrip() {
+            const tripName = document.getElementById('tripNameInput').value.trim();
+            
+            if (!tripName) {
+                alert('Please enter a trip name');
+                return;
+            }
+
+            if (tempPeople.length === 0) {
+                alert('Please add at least one person');
+                return;
+            }
+
+            const sanitizedName = sanitizeTripName(tripName);
+            const manageCode = generateCode();
+            const viewCode = generateCode();
+
+            const manageHash = `${sanitizedName}-${manageCode}`;
+            const viewHash = `${sanitizedName}-${viewCode}`;
+
+            const tripData = {
+                name: tripName,
+                people: [...tempPeople],
+                expenses: [],
+                createdAt: new Date().toISOString(),
+                role: 'manage',
+                viewHash: viewHash
+            };
+
+            const viewTripData = {
+                ...tripData,
+                role: 'view',
+                manageHash: manageHash
+            };
+
+            // Save both versions
+            localStorage.setItem(`trip-${manageHash}`, JSON.stringify(tripData));
+            localStorage.setItem(`trip-${viewHash}`, JSON.stringify(viewTripData));
+
+            // Show success screen
+            currentManageHash = manageHash;
+            currentViewHash = viewHash;
+            
+            const baseUrl = window.location.origin + window.location.pathname;
+            document.getElementById('manageUrlDisplay').textContent = `${baseUrl}#${manageHash}`;
+            document.getElementById('viewUrlDisplay').textContent = `${baseUrl}#${viewHash}`;
+
+            document.getElementById('createTripScreen').classList.add('hidden');
+            document.getElementById('tripCreatedScreen').classList.remove('hidden');
+        }
+
+        // Copy manage URL
+        function copyManageUrl() {
+            const text = document.getElementById('manageUrlDisplay').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Your manage URL copied! Save this somewhere safe.');
+            });
+        }
+
+        // Share view URL
+        function shareViewUrl() {
+            const text = document.getElementById('viewUrlDisplay').textContent;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'TripSplit - Join Trip',
+                    text: 'Track our trip expenses here:',
+                    url: text
+                }).catch(() => {
+                    // Fallback to copy
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('📋 View URL copied to clipboard!');
+                    });
+                });
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('📋 View URL copied to clipboard!');
+                });
+            }
+        }
+
+        // Load trips list
+        function loadTripsList() {
+            const container = document.getElementById('tripsList');
+            const trips = [];
+
+            // Get all trips from localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('trip-')) {
+                    const tripData = JSON.parse(localStorage.getItem(key));
+                    if (tripData.role === 'manage') {
+                        trips.push({
+                            hash: key.replace('trip-', ''),
+                            data: tripData
+                        });
+                    }
+                }
+            }
+
+            if (trips.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="emoji">🏖️</div>
+                        <p>No trips yet!</p>
+                        <p style="font-size: 14px;">Create your first trip to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '<h3 style="margin-bottom: 15px;">🏖️ Your Trips</h3>' + 
+                trips.map(trip => {
+                    const total = trip.data.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                    const perPerson = trip.data.people.length > 0 ? (total / trip.data.people.length).toFixed(0) : 0;
+                    
+                    return `
+                        <div class="trip-card" onclick="openTrip('${trip.hash}')">
+                            <h3>${trip.data.name}</h3>
+                            <div class="trip-meta">
+                                <span>💰 ₹${total.toLocaleString('en-IN')}</span>
+                                <span>👥 ${trip.data.people.length} people</span>
+                                <span>📝 ${trip.data.expenses.length} expenses</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // Open trip
+        function openTrip(hash) {
+            window.location.hash = hash;
+            loadTripFromHash(hash);
+        }
+
+        // Load trip from hash
+        function loadTripFromHash(hash) {
+            const tripData = localStorage.getItem(`trip-${hash}`);
+            
+            if (!tripData) {
+                alert('Trip not found!');
+                window.location.hash = '';
+                showHome();
+                return;
+            }
+
+            currentTripData = JSON.parse(tripData);
+            renderTripDetail();
+            
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('createTripScreen').classList.add('hidden');
+            document.getElementById('tripCreatedScreen').classList.add('hidden');
+            document.getElementById('tripDetailScreen').classList.remove('hidden');
+        }
+
+        // Show home
+        function showHome() {
+            window.location.hash = '';
+            document.getElementById('homeScreen').classList.remove('hidden');
+            document.getElementById('createTripScreen').classList.add('hidden');
+            document.getElementById('tripCreatedScreen').classList.add('hidden');
+            document.getElementById('tripDetailScreen').classList.add('hidden');
+            loadTripsList();
+        }
+
+        // Render trip detail (to be continued...)
+        function renderTripDetail() {
+            // Will implement tabs: Add Expense, View Expenses, Settlement
+            // Running out of space - will continue in next session
+            const isManage = currentTripData.role === 'manage';
+            const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const perPerson = currentTripData.people.length > 0 ? (total / currentTripData.people.length).toFixed(0) : 0;
+
+            document.getElementById('tripDetailScreen').innerHTML = `
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>🌴 ${currentTripData.name}</h2>
+                        <span class="badge ${isManage ? 'badge-manage' : 'badge-view'}">
+                            ${isManage ? '✏️ Manage' : '👁️ View'}
+                        </span>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Total Spent</span>
+                            <span class="stat-value">₹${total.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Per Person</span>
+                            <span class="stat-value">₹${perPerson.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Expenses</span>
+                            <span class="stat-value">${currentTripData.expenses.length}</span>
+                        </div>
+                    </div>
+
+                    ${isManage ? renderManageTabs() : renderViewOnly()}
+
+                    <button class="btn" onclick="showHome()" style="background: #E8E8E8; margin-top: 20px;">
+                        ← Back to Home
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderManageTabs() {
+            return `
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('add')">➕ Add</button>
+                    <button class="tab-btn" onclick="switchTab('list')">📋 List</button>
+                    <button class="tab-btn" onclick="switchTab('settle')">💸 Settle</button>
+                </div>
+                
+                <div id="tab-add" class="tab-content active">
+                    ${renderAddExpenseForm()}
+                </div>
+                
+                <div id="tab-list" class="tab-content">
+                    ${renderExpensesList()}
+                </div>
+                
+                <div id="tab-settle" class="tab-content">
+                    ${renderSettlement()}
+                </div>
+            `;
+        }
+
+        function renderViewOnly() {
+            return `
+                <div style="background: #FFF8E7; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                    <p>👁️ View Only Mode</p>
+                    <p style="font-size: 14px; color: #666; margin-top: 5px;">Only the trip creator can add expenses</p>
+                </div>
+                ${renderExpensesList()}
+            `;
+        }
+
+        function renderAddExpenseForm() {
+            return `
+                <div class="input-group">
+                    <label>What did you spend on?</label>
+                    <select id="categoryInput">
+                        ${Object.keys(categoryIcons).map(cat => `<option value="${cat}">${categoryIcons[cat]} ${cat}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>How much?</label>
+                    <input type="number" id="amountInput" placeholder="0" min="0" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label>Who paid?</label>
+                    <select id="paidByInput">
+                        ${currentTripData.people.map(person => `<option value="${person}">👤 ${person}</option>`).join('')}
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="addExpense()">
+                    ✅ Add Expense
+                </button>
+            `;
+        }
+
+        function renderExpensesList() {
+            if (currentTripData.expenses.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="emoji">💸</div>
+                        <p>No expenses yet</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="expense-list">
+                    ${currentTripData.expenses.map((exp, index) => `
+                        <div class="expense-item">
+                            <span class="expense-icon">${categoryIcons[exp.category] || '📸'}</span>
+                            <div class="expense-details">
+                                <div class="expense-category">${exp.category}</div>
+                                <div class="expense-payer">Paid by ${exp.paidBy}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="expense-amount">₹${exp.amount.toLocaleString('en-IN')}</div>
+                                ${currentTripData.role === 'manage' ? `<button class="delete-btn" onclick="deleteExpense(${index})">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderSettlement() {
+            const settlements = calculateSettlement();
+            
+            if (settlements.length === 0) {
+                return `<div class="empty-state"><div class="emoji">✅</div><p>All settled up!</p></div>`;
+            }
+
+            return `
+                <div class="settlement-list">
+                    ${settlements.map(s => `
+                        <div class="settlement-item">
+                            <div class="settlement-text">${s.from} → ${s.to}</div>
+                            <div class="settlement-amount">₹${s.amount.toLocaleString('en-IN')}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <button class="btn btn-primary" onclick="copySettlement()" style="margin-top: 20px;">
+                    📋 Copy Settlement Summary
+                </button>
+
+                <button class="btn btn-secondary" onclick="completeTrip()" style="margin-top: 10px;">
+                    ✅ Complete Trip & Download
+                </button>
+            `;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        function addExpense() {
+            const category = document.getElementById('categoryInput').value;
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const paidBy = document.getElementById('paidByInput').value;
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            currentTripData.expenses.push({
+                category,
+                amount,
+                paidBy,
+                date: new Date().toISOString()
+            });
+
+            saveTripData();
+            renderTripDetail();
+            document.getElementById('amountInput').value = '';
+        }
+
+        function deleteExpense(index) {
+            if (confirm('Delete this expense?')) {
+                currentTripData.expenses.splice(index, 1);
+                saveTripData();
+                renderTripDetail();
+            }
+        }
+
+        function saveTripData() {
+            const hash = window.location.hash.slice(1);
+            localStorage.setItem(`trip-${hash}`, JSON.stringify(currentTripData));
+            
+            // Sync to view version if manage
+            if (currentTripData.role === 'manage' && currentTripData.viewHash) {
+                const viewData = JSON.parse(localStorage.getItem(`trip-${currentTripData.viewHash}`));
+                if (viewData) {
+                    viewData.expenses = currentTripData.expenses;
+                    localStorage.setItem(`trip-${currentTripData.viewHash}`, JSON.stringify(viewData));
+                }
+            }
+        }
+
+        function calculateSettlement() {
+            const balances = {};
+            const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const perPerson = total / currentTripData.people.length;
+
+            // Initialize balances
+            currentTripData.people.forEach(person => {
+                balances[person] = -perPerson;
+            });
+
+            // Add what each person paid
+            currentTripData.expenses.forEach(exp => {
+                balances[exp.paidBy] += exp.amount;
+            });
+
+            // Calculate settlements
+            const settlements = [];
+            const debtors = [];
+            const creditors = [];
+
+            Object.entries(balances).forEach(([person, balance]) => {
+                if (balance < -0.01) {
+                    debtors.push({ person, amount: -balance });
+                } else if (balance > 0.01) {
+                    creditors.push({ person, amount: balance });
+                }
+            });
+
+            debtors.forEach(debtor => {
+                creditors.forEach(creditor => {
+                    if (debtor.amount > 0.01 && creditor.amount > 0.01) {
+                        const amount = Math.min(debtor.amount, creditor.amount);
+                        settlements.push({
+                            from: debtor.person,
+                            to: creditor.person,
+                            amount: Math.round(amount)
+                        });
+                        debtor.amount -= amount;
+                        creditor.amount -= amount;
+                    }
+                });
+            });
+
+            return settlements;
+        }
+
+        function copySettlement() {
+            const settlements = calculateSettlement();
+            const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const perPerson = Math.round(total / currentTripData.people.length);
+
+            let text = `${currentTripData.name}\n`;
+            text += `Total: ₹${total.toLocaleString('en-IN')}\n`;
+            text += `Per person: ₹${perPerson.toLocaleString('en-IN')}\n\n`;
+            text += `Settlement:\n`;
+            settlements.forEach(s => {
+                text += `${s.from} pays ${s.to}: ₹${s.amount.toLocaleString('en-IN')}\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 Settlement copied! Paste in WhatsApp group.');
+            });
+        }
+
+        function completeTrip() {
+            // Download detailed statement
+            const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const perPerson = Math.round(total / currentTripData.people.length);
+            const settlements = calculateSettlement();
+
+            let statement = `${currentTripData.name.toUpperCase()}\n`;
+            statement += `${'='.repeat(40)}\n\n`;
+            statement += `EXPENSES:\n`;
+            statement += `${'-'.repeat(40)}\n`;
+            currentTripData.expenses.forEach((exp, i) => {
+                statement += `${i + 1}. ${exp.category} - ₹${exp.amount.toLocaleString('en-IN')} (${exp.paidBy})\n`;
+            });
+            statement += `\nTOTAL: ₹${total.toLocaleString('en-IN')}\n`;
+            statement += `PER PERSON: ₹${perPerson.toLocaleString('en-IN')}\n\n`;
+            statement += `SETTLEMENT:\n`;
+            statement += `${'-'.repeat(40)}\n`;
+            settlements.forEach(s => {
+                statement += `${s.from} → ${s.to}: ₹${s.amount.toLocaleString('en-IN')}\n`;
+            });
+            statement += `\nGenerated: ${new Date().toLocaleDateString('en-IN')}\n`;
+
+            const blob = new Blob([statement], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${sanitizeTripName(currentTripData.name)}_statement.txt`;
+            a.click();
+
+            if (confirm('Statement downloaded! Delete this trip from app?')) {
+                const hash = window.location.hash.slice(1);
+                localStorage.removeItem(`trip-${hash}`);
+                if (currentTripData.viewHash) {
+                    localStorage.removeItem(`trip-${currentTripData.viewHash}`);
+                }
+                showHome();
+            }
+        }
+    </script>
+</body>
+</html>
