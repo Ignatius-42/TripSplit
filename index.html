@@ -103,17 +103,25 @@
         }
 
         .input-group input,
-        .input-group select {
+        .input-group select,
+        .input-group textarea {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #E8E8E8;
             border-radius: 10px;
             font-size: 16px;
             transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 60px;
         }
 
         .input-group input:focus,
-        .input-group select:focus {
+        .input-group select:focus,
+        .input-group textarea:focus {
             outline: none;
             border-color: #00D9C0;
         }
@@ -147,6 +155,7 @@
             gap: 15px;
             font-size: 14px;
             opacity: 0.9;
+            flex-wrap: wrap;
         }
 
         .expense-list {
@@ -162,12 +171,13 @@
             border-radius: 12px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
         }
 
         .expense-item .expense-icon {
             font-size: 24px;
             margin-right: 12px;
+            flex-shrink: 0;
         }
 
         .expense-item .expense-details {
@@ -176,6 +186,12 @@
 
         .expense-item .expense-category {
             font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .expense-item .expense-note {
+            font-size: 13px;
+            color: #888;
             margin-bottom: 4px;
         }
 
@@ -188,17 +204,20 @@
             font-size: 20px;
             font-weight: 700;
             color: #00B8A9;
+            margin-bottom: 8px;
         }
 
-        .expense-item .delete-btn {
-            background: #FF6B6B;
+        .expense-item .expense-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
             border: none;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            font-size: 20px;
             cursor: pointer;
-            font-size: 16px;
+            padding: 4px;
         }
 
         .stats {
@@ -241,10 +260,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            overflow-x: auto;
         }
 
         .tab-btn {
             flex: 1;
+            min-width: 100px;
             padding: 12px;
             border: none;
             background: #E8E8E8;
@@ -252,6 +273,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
+            white-space: nowrap;
         }
 
         .tab-btn.active {
@@ -309,6 +331,7 @@
             font-size: 12px;
             font-weight: 600;
             margin-left: 10px;
+            cursor: pointer;
         }
 
         .badge-manage {
@@ -319,6 +342,34 @@
         .badge-view {
             background: #00D9C0;
             color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         @media (max-width: 480px) {
@@ -366,12 +417,17 @@
                 <h2 style="margin-bottom: 20px;">🎒 Create New Trip</h2>
 
                 <div class="input-group">
+                    <label>Your Name (Accountant)</label>
+                    <input type="text" id="accountantNameInput" placeholder="e.g., Rahul">
+                </div>
+
+                <div class="input-group">
                     <label>Trip Name</label>
                     <input type="text" id="tripNameInput" placeholder="e.g., Goa 2026" maxlength="30">
                 </div>
 
                 <div class="input-group">
-                    <label>Add People</label>
+                    <label>Add People (Including You)</label>
                     <div id="peopleList" style="margin-bottom: 10px;">
                         <!-- People will be listed here -->
                     </div>
@@ -404,6 +460,7 @@
                     <button class="btn btn-secondary" onclick="copyManageUrl()">
                         📋 Copy Your URL
                     </button>
+                    <p style="font-size: 13px; color: #999; margin-top: 8px;">⚠️ Save this URL! Send it to yourself on WhatsApp.</p>
                 </div>
 
                 <div style="margin-bottom: 20px;">
@@ -426,13 +483,77 @@
         </div>
     </div>
 
+    <!-- Edit Expense Modal -->
+    <div id="editExpenseModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">✏️ Edit Expense</h3>
+            
+            <div class="input-group">
+                <label>Category</label>
+                <select id="editCategoryInput"></select>
+            </div>
+
+            <div class="input-group">
+                <label>Details (optional)</label>
+                <input type="text" id="editNoteInput" placeholder="e.g., Taj Hotel, Beach Cafe">
+            </div>
+
+            <div class="input-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="editAmountInput" min="0" step="1">
+            </div>
+
+            <div class="input-group">
+                <label>Who Paid?</label>
+                <select id="editPaidByInput"></select>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveExpenseEdit()">
+                ✅ Save Changes
+            </button>
+
+            <button class="btn" onclick="closeEditModal()" style="background: #E8E8E8; margin-top: 10px;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Trip Settings Modal -->
+    <div id="tripSettingsModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">⚙️ Trip Settings</h3>
+            
+            <div class="input-group">
+                <label>Trip Name</label>
+                <input type="text" id="settingsTripName">
+            </div>
+
+            <div class="input-group">
+                <label>People</label>
+                <div id="settingsPeopleList" style="margin-bottom: 10px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="settingsAddPersonInput" placeholder="Add new person">
+                    <button class="btn btn-secondary" onclick="addPersonToSettings()" style="width: auto; padding: 12px 20px;">Add</button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveTripSettings()">
+                ✅ Save Settings
+            </button>
+
+            <button class="btn" onclick="closeSettingsModal()" style="background: #E8E8E8; margin-top: 10px;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
     <script>
         let currentTripData = null;
         let currentManageHash = '';
         let currentViewHash = '';
         let tempPeople = [];
+        let editingExpenseIndex = null;
 
-        // Category icons mapping
         const categoryIcons = {
             'Hotel': '🏨',
             'Food': '🍽️',
@@ -443,7 +564,6 @@
             'Other': '📸'
         };
 
-        // Initialize app
         window.onload = function() {
             const hash = window.location.hash.slice(1);
             if (hash) {
@@ -453,7 +573,6 @@
             }
         };
 
-        // Generate random 6-character code
         function generateCode() {
             const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
             let code = '';
@@ -463,22 +582,19 @@
             return code;
         }
 
-        // Sanitize trip name for URL
         function sanitizeTripName(name) {
-            return name.toLowerCase()
-                .replace(/[^a-z0-9]/g, '')
-                .slice(0, 20);
+            return name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
         }
 
-        // Show create trip screen
         function showCreateTrip() {
             document.getElementById('homeScreen').classList.add('hidden');
             document.getElementById('createTripScreen').classList.remove('hidden');
             tempPeople = [];
+            document.getElementById('accountantNameInput').value = '';
+            document.getElementById('tripNameInput').value = '';
             updatePeopleList();
         }
 
-        // Add person to list
         function addPerson() {
             const input = document.getElementById('personNameInput');
             const name = input.value.trim();
@@ -489,7 +605,6 @@
             }
         }
 
-        // Update people list display
         function updatePeopleList() {
             const container = document.getElementById('peopleList');
             if (tempPeople.length === 0) {
@@ -505,19 +620,28 @@
             `).join('');
         }
 
-        // Remove person from list
         function removePerson(index) {
             tempPeople.splice(index, 1);
             updatePeopleList();
         }
 
-        // Create trip
         function createTrip() {
+            const accountantName = document.getElementById('accountantNameInput').value.trim();
             const tripName = document.getElementById('tripNameInput').value.trim();
             
+            if (!accountantName) {
+                alert('Please enter your name');
+                return;
+            }
+
             if (!tripName) {
                 alert('Please enter a trip name');
                 return;
+            }
+
+            // Add accountant to people list if not already there
+            if (!tempPeople.includes(accountantName)) {
+                tempPeople.unshift(accountantName);
             }
 
             if (tempPeople.length === 0) {
@@ -535,6 +659,7 @@
             const tripData = {
                 name: tripName,
                 people: [...tempPeople],
+                accountant: accountantName,
                 expenses: [],
                 createdAt: new Date().toISOString(),
                 role: 'manage',
@@ -547,11 +672,9 @@
                 manageHash: manageHash
             };
 
-            // Save both versions
             localStorage.setItem(`trip-${manageHash}`, JSON.stringify(tripData));
             localStorage.setItem(`trip-${viewHash}`, JSON.stringify(viewTripData));
 
-            // Show success screen
             currentManageHash = manageHash;
             currentViewHash = viewHash;
             
@@ -563,7 +686,6 @@
             document.getElementById('tripCreatedScreen').classList.remove('hidden');
         }
 
-        // Copy manage URL
         function copyManageUrl() {
             const text = document.getElementById('manageUrlDisplay').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -571,7 +693,6 @@
             });
         }
 
-        // Share view URL
         function shareViewUrl() {
             const text = document.getElementById('viewUrlDisplay').textContent;
             
@@ -581,7 +702,6 @@
                     text: 'Track our trip expenses here:',
                     url: text
                 }).catch(() => {
-                    // Fallback to copy
                     navigator.clipboard.writeText(text).then(() => {
                         alert('📋 View URL copied to clipboard!');
                     });
@@ -593,12 +713,10 @@
             }
         }
 
-        // Load trips list
         function loadTripsList() {
             const container = document.getElementById('tripsList');
             const trips = [];
 
-            // Get all trips from localStorage
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('trip-')) {
@@ -626,7 +744,6 @@
             container.innerHTML = '<h3 style="margin-bottom: 15px;">🏖️ Your Trips</h3>' + 
                 trips.map(trip => {
                     const total = trip.data.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-                    const perPerson = trip.data.people.length > 0 ? (total / trip.data.people.length).toFixed(0) : 0;
                     
                     return `
                         <div class="trip-card" onclick="openTrip('${trip.hash}')">
@@ -641,13 +758,11 @@
                 }).join('');
         }
 
-        // Open trip
         function openTrip(hash) {
             window.location.hash = hash;
             loadTripFromHash(hash);
         }
 
-        // Load trip from hash
         function loadTripFromHash(hash) {
             const tripData = localStorage.getItem(`trip-${hash}`);
             
@@ -667,7 +782,6 @@
             document.getElementById('tripDetailScreen').classList.remove('hidden');
         }
 
-        // Show home
         function showHome() {
             window.location.hash = '';
             document.getElementById('homeScreen').classList.remove('hidden');
@@ -677,10 +791,7 @@
             loadTripsList();
         }
 
-        // Render trip detail (to be continued...)
         function renderTripDetail() {
-            // Will implement tabs: Add Expense, View Expenses, Settlement
-            // Running out of space - will continue in next session
             const isManage = currentTripData.role === 'manage';
             const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
             const perPerson = currentTripData.people.length > 0 ? (total / currentTripData.people.length).toFixed(0) : 0;
@@ -689,8 +800,9 @@
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2>🌴 ${currentTripData.name}</h2>
-                        <span class="badge ${isManage ? 'badge-manage' : 'badge-view'}">
-                            ${isManage ? '✏️ Manage' : '👁️ View'}
+                        <span class="badge ${isManage ? 'badge-manage' : 'badge-view'}" 
+                              ${isManage ? 'onclick="showTripSettings()"' : ''}>
+                            ${isManage ? '⚙️ Manage' : '👁️ View'}
                         </span>
                     </div>
 
@@ -709,7 +821,7 @@
                         </div>
                     </div>
 
-                    ${isManage ? renderManageTabs() : renderViewOnly()}
+                    ${isManage ? renderManageTabs() : renderViewTabs()}
 
                     <button class="btn" onclick="showHome()" style="background: #E8E8E8; margin-top: 20px;">
                         ← Back to Home
@@ -731,7 +843,7 @@
                 </div>
                 
                 <div id="tab-list" class="tab-content">
-                    ${renderExpensesList()}
+                    ${renderExpensesList(true)}
                 </div>
                 
                 <div id="tab-settle" class="tab-content">
@@ -740,13 +852,25 @@
             `;
         }
 
-        function renderViewOnly() {
+        function renderViewTabs() {
             return `
                 <div style="background: #FFF8E7; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
                     <p>👁️ View Only Mode</p>
                     <p style="font-size: 14px; color: #666; margin-top: 5px;">Only the trip creator can add expenses</p>
                 </div>
-                ${renderExpensesList()}
+
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('list')">📋 Expenses</button>
+                    <button class="tab-btn" onclick="switchTab('settle')">💸 Settlement</button>
+                </div>
+                
+                <div id="tab-list" class="tab-content active">
+                    ${renderExpensesList(false)}
+                </div>
+                
+                <div id="tab-settle" class="tab-content">
+                    ${renderSettlement()}
+                </div>
             `;
         }
 
@@ -757,6 +881,11 @@
                     <select id="categoryInput">
                         ${Object.keys(categoryIcons).map(cat => `<option value="${cat}">${categoryIcons[cat]} ${cat}</option>`).join('')}
                     </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Details (optional)</label>
+                    <input type="text" id="noteInput" placeholder="e.g., Taj Hotel, Beach Cafe, Park tickets">
                 </div>
 
                 <div class="input-group">
@@ -777,7 +906,7 @@
             `;
         }
 
-        function renderExpensesList() {
+        function renderExpensesList(canEdit) {
             if (currentTripData.expenses.length === 0) {
                 return `
                     <div class="empty-state">
@@ -794,11 +923,17 @@
                             <span class="expense-icon">${categoryIcons[exp.category] || '📸'}</span>
                             <div class="expense-details">
                                 <div class="expense-category">${exp.category}</div>
+                                ${exp.note ? `<div class="expense-note">${exp.note}</div>` : ''}
                                 <div class="expense-payer">Paid by ${exp.paidBy}</div>
                             </div>
                             <div style="text-align: right;">
                                 <div class="expense-amount">₹${exp.amount.toLocaleString('en-IN')}</div>
-                                ${currentTripData.role === 'manage' ? `<button class="delete-btn" onclick="deleteExpense(${index})">🗑️</button>` : ''}
+                                ${canEdit ? `
+                                    <div class="expense-actions">
+                                        <button class="icon-btn" onclick="editExpense(${index})" title="Edit">✏️</button>
+                                        <button class="icon-btn" onclick="deleteExpense(${index})" title="Delete">🗑️</button>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     `).join('')}
@@ -823,13 +958,19 @@
                     `).join('')}
                 </div>
 
-                <button class="btn btn-primary" onclick="copySettlement()" style="margin-top: 20px;">
-                    📋 Copy Settlement Summary
-                </button>
+                ${currentTripData.role === 'manage' ? `
+                    <button class="btn btn-primary" onclick="copySettlement()" style="margin-top: 20px;">
+                        📋 Copy Settlement Summary
+                    </button>
 
-                <button class="btn btn-secondary" onclick="completeTrip()" style="margin-top: 10px;">
-                    ✅ Complete Trip & Download
-                </button>
+                    <button class="btn btn-secondary" onclick="completeTrip()" style="margin-top: 10px;">
+                        ✅ Complete Trip & Download
+                    </button>
+                ` : `
+                    <button class="btn btn-primary" onclick="copySettlement()" style="margin-top: 20px;">
+                        📋 Copy Settlement Summary
+                    </button>
+                `}
             `;
         }
 
@@ -843,6 +984,7 @@
 
         function addExpense() {
             const category = document.getElementById('categoryInput').value;
+            const note = document.getElementById('noteInput').value.trim();
             const amount = parseFloat(document.getElementById('amountInput').value);
             const paidBy = document.getElementById('paidByInput').value;
 
@@ -853,6 +995,7 @@
 
             currentTripData.expenses.push({
                 category,
+                note,
                 amount,
                 paidBy,
                 date: new Date().toISOString()
@@ -860,7 +1003,51 @@
 
             saveTripData();
             renderTripDetail();
-            document.getElementById('amountInput').value = '';
+            
+            // Switch to list tab after adding
+            setTimeout(() => switchTabProgrammatically('list'), 100);
+        }
+
+        function editExpense(index) {
+            editingExpenseIndex = index;
+            const expense = currentTripData.expenses[index];
+
+            document.getElementById('editCategoryInput').innerHTML = 
+                Object.keys(categoryIcons).map(cat => 
+                    `<option value="${cat}" ${cat === expense.category ? 'selected' : ''}>${categoryIcons[cat]} ${cat}</option>`
+                ).join('');
+
+            document.getElementById('editNoteInput').value = expense.note || '';
+            document.getElementById('editAmountInput').value = expense.amount;
+
+            document.getElementById('editPaidByInput').innerHTML = 
+                currentTripData.people.map(person => 
+                    `<option value="${person}" ${person === expense.paidBy ? 'selected' : ''}>👤 ${person}</option>`
+                ).join('');
+
+            document.getElementById('editExpenseModal').classList.add('show');
+        }
+
+        function saveExpenseEdit() {
+            if (editingExpenseIndex === null) return;
+
+            currentTripData.expenses[editingExpenseIndex] = {
+                ...currentTripData.expenses[editingExpenseIndex],
+                category: document.getElementById('editCategoryInput').value,
+                note: document.getElementById('editNoteInput').value.trim(),
+                amount: parseFloat(document.getElementById('editAmountInput').value),
+                paidBy: document.getElementById('editPaidByInput').value
+            };
+
+            saveTripData();
+            closeEditModal();
+            renderTripDetail();
+            setTimeout(() => switchTabProgrammatically('list'), 100);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editExpenseModal').classList.remove('show');
+            editingExpenseIndex = null;
         }
 
         function deleteExpense(index) {
@@ -868,6 +1055,72 @@
                 currentTripData.expenses.splice(index, 1);
                 saveTripData();
                 renderTripDetail();
+                setTimeout(() => switchTabProgrammatically('list'), 100);
+            }
+        }
+
+        function showTripSettings() {
+            document.getElementById('settingsTripName').value = currentTripData.name;
+            updateSettingsPeopleList();
+            document.getElementById('tripSettingsModal').classList.add('show');
+        }
+
+        function updateSettingsPeopleList() {
+            const container = document.getElementById('settingsPeopleList');
+            container.innerHTML = currentTripData.people.map((person, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F8F9FA; border-radius: 8px; margin-bottom: 8px;">
+                    <span>👤 ${person}</span>
+                    ${currentTripData.people.length > 1 ? `
+                        <button onclick="removePersonFromSettings(${index})" style="background: #FF6B6B; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function addPersonToSettings() {
+            const input = document.getElementById('settingsAddPersonInput');
+            const name = input.value.trim();
+            if (name && !currentTripData.people.includes(name)) {
+                currentTripData.people.push(name);
+                updateSettingsPeopleList();
+                input.value = '';
+            }
+        }
+
+        function removePersonFromSettings(index) {
+            if (currentTripData.people.length <= 1) {
+                alert('Must have at least one person in the trip');
+                return;
+            }
+            currentTripData.people.splice(index, 1);
+            updateSettingsPeopleList();
+        }
+
+        function saveTripSettings() {
+            const newName = document.getElementById('settingsTripName').value.trim();
+            if (!newName) {
+                alert('Please enter a trip name');
+                return;
+            }
+
+            currentTripData.name = newName;
+            saveTripData();
+            closeSettingsModal();
+            renderTripDetail();
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('tripSettingsModal').classList.remove('show');
+        }
+
+        function switchTabProgrammatically(tabName) {
+            const tabBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`);
+            if (tabBtn) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                tabBtn.classList.add('active');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
             }
         }
 
@@ -875,10 +1128,11 @@
             const hash = window.location.hash.slice(1);
             localStorage.setItem(`trip-${hash}`, JSON.stringify(currentTripData));
             
-            // Sync to view version if manage
             if (currentTripData.role === 'manage' && currentTripData.viewHash) {
                 const viewData = JSON.parse(localStorage.getItem(`trip-${currentTripData.viewHash}`));
                 if (viewData) {
+                    viewData.name = currentTripData.name;
+                    viewData.people = currentTripData.people;
                     viewData.expenses = currentTripData.expenses;
                     localStorage.setItem(`trip-${currentTripData.viewHash}`, JSON.stringify(viewData));
                 }
@@ -890,17 +1144,14 @@
             const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
             const perPerson = total / currentTripData.people.length;
 
-            // Initialize balances
             currentTripData.people.forEach(person => {
                 balances[person] = -perPerson;
             });
 
-            // Add what each person paid
             currentTripData.expenses.forEach(exp => {
                 balances[exp.paidBy] += exp.amount;
             });
 
-            // Calculate settlements
             const settlements = [];
             const debtors = [];
             const creditors = [];
@@ -950,7 +1201,6 @@
         }
 
         function completeTrip() {
-            // Download detailed statement
             const total = currentTripData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
             const perPerson = Math.round(total / currentTripData.people.length);
             const settlements = calculateSettlement();
@@ -960,7 +1210,7 @@
             statement += `EXPENSES:\n`;
             statement += `${'-'.repeat(40)}\n`;
             currentTripData.expenses.forEach((exp, i) => {
-                statement += `${i + 1}. ${exp.category} - ₹${exp.amount.toLocaleString('en-IN')} (${exp.paidBy})\n`;
+                statement += `${i + 1}. ${exp.category}${exp.note ? ' - ' + exp.note : ''} - ₹${exp.amount.toLocaleString('en-IN')} (${exp.paidBy})\n`;
             });
             statement += `\nTOTAL: ₹${total.toLocaleString('en-IN')}\n`;
             statement += `PER PERSON: ₹${perPerson.toLocaleString('en-IN')}\n\n`;
